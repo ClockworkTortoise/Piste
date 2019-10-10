@@ -17,6 +17,8 @@ const NUM_COLS = 2 * SPAN + 1;
 // - SPAN rows whose outermost spaces are in the bottom player's core, where the board starts to narrow toward the bottom
 // - One final row at the bottom, containing only the uppermost core space for the bottom player
 const NUM_ROWS = 2 * (SPAN + MID_HEIGHT) + 3;
+// Index of the middle row of the board
+const MID_ROW = (NUM_ROWS - 1) / 2;
 
 // We'll need this a lot for calculating the centers of hexes, so let's just calculate it once
 const SQRT3 = Math.sqrt(3);
@@ -155,12 +157,46 @@ function drawBoard() {
         case UNCONTROLLED:
           fill = UNCONTROLLED_FILL;
           break;
+        default:
+          // In theory every board space should match one of the above.
+          // If we somehow get a board space that doesn't, then we'll just
+          // leave it as NOT_ON_BOARD.
       }
       if (fill !== NOT_ON_BOARD) {
-        drawHex(x, y, graphics.hexSize, fill);
+        let label = "-";
+        let scoreValue = getScoreValue(col, row);
+        if (scoreValue > 0) {
+          label = scoreValue + "↑";
+        } else if (scoreValue < 0) {
+          label = (-scoreValue) + "↓";
+        }
+        drawHex(x, y, graphics.hexSize, fill, label);
       }
     }
   }
+}
+
+// Returns the score value associated with a particular board space.
+// If the space scores for the player that starts from the bottom, the return value will be negative to indicate this.
+function getScoreValue(col, row) {
+  // Value for a non-core space is just how far it is from the center row.
+  // Rows above that row (with lower index) score for the bottom player,
+  // and rows below it (with higher index) score for the top player.
+  let score = row - MID_ROW;
+  // Core spaces score more points, especially the uppermost and lowermost peaks of the board,
+  // so let's figure out if it's a core space.
+  if (row === 0 || row === NUM_ROWS - 1) {
+    // The only spaces in these rows are the extreme tips of the board
+    score += (SPAN + 2) * (score > 0 ? 1 : -1);
+  } else {
+    // Other core spaces are those for which the horizontal distance from the column is equal to
+    // the vertical distance from the top or bottom row.
+    let laterality = Math.abs(col - SPAN);
+    if (laterality === row || laterality === NUM_ROWS - 1 - row) {
+      score += (SPAN + 1 - laterality) * (score > 0 ? 1 : -1);
+    }
+  }
+  return score;
 }
 
 function drawHex(centerX, centerY, sideLength, fill, label = "") {

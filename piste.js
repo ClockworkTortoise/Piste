@@ -28,15 +28,15 @@ var players = [
   {
     core: 10,
     control: 0,
-    coreFill: "#000090",
-    fill: "#0000ff",
+    coreFill: "#000080",
+    fill: "#0000d0",
   },
   // players[1] is the player that starts from the top of the board
   {
     core: 11,
     control: 1,
-    coreFill: "#900000",
-    fill: "#ff0000",
+    coreFill: "#800000",
+    fill: "#d00000",
   }
 ]
 // Marker and fill style for spaces not currently controlled by either player
@@ -58,6 +58,8 @@ var graphics = {
   // Length of the side of the area allocated for a board space EXCLUDING its share of the border between spaces
   // (i.e. only the region that's colored). This should be less than "spacing".
   hexSize: 32,
+  // Font to use for labeling point values on board spaces
+  boardLabelFont: "20px Arial",
 };
 
 // All game state, including who controls what parts of the board, cards in players' hands, whose turn it is, etc.
@@ -161,7 +163,7 @@ function drawBoard() {
   }
 }
 
-function drawHex(centerX, centerY, sideLength, fill) {
+function drawHex(centerX, centerY, sideLength, fill, label = "") {
   ctx.beginPath();
   ctx.moveTo(centerX + sideLength, centerY);
   for (let i = 1; i < 6; i++) {
@@ -171,4 +173,12 @@ function drawHex(centerX, centerY, sideLength, fill) {
   ctx.closePath();
   ctx.fillStyle = fill;
   ctx.fill();
+
+  if (label !== "") {
+    ctx.font = graphics.boardLabelFont;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "white";
+    ctx.fillText(label, centerX, centerY);
+  }
 }

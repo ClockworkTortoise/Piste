@@ -3,7 +3,7 @@
 const SPAN = 4;
 // Number of initially uncontrolled spaces in the leftmost and rightmost columns.
 // This is a total including both players and the neutral row, so the alignment of the neutral row will depend on whether this is odd or even.
-const SPACING = 6;
+const MID_HEIGHT = 6;
 
 // Total number of columns is two lateral regions of width SPAN, plus one central column.
 const NUM_COLS = 2 * SPAN + 1;
@@ -12,11 +12,11 @@ const NUM_COLS = 2 * SPAN + 1;
 // The math is due to the following count of rows:
 // - One at the top, containing only the uppermost core space for the top player
 // - Another SPAN rows where the board gets wider, with the outermost spaces in these rows being in the top player's core
-// - SPACING rows which occupy the outer edges of the board between the top and bottom core regions
-// - SPACING+1 rows of the other parity, in the notches between, before, and after the SPACING rows in the intermediate space on the outer edges
+// - MID_HEIGHT rows which occupy the outer edges of the board between the top and bottom core regions
+// - MID_HEIGHT+1 rows of the other parity, in the notches between, before, and after the MID_HEIGHT rows in the intermediate space on the outer edges
 // - SPAN rows whose outermost spaces are in the bottom player's core, where the board starts to narrow toward the bottom
 // - One final row at the bottom, containing only the uppermost core space for the bottom player
-const NUM_ROWS = 2 * (SPAN + SPACING) + 3;
+const NUM_ROWS = 2 * (SPAN + MID_HEIGHT) + 3;
 
 // We'll need this a lot for calculating the centers of hexes, so let's just calculate it once
 const SQRT3 = Math.sqrt(3);

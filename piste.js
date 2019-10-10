@@ -130,9 +130,7 @@ function drawBoard() {
   let leftColCenterX = graphics.margin + graphics.spacing;
   let topRowCenterY = graphics.margin + graphics.spacing * SQRT3 / 2;
   for (let col = 0; col < NUM_COLS; col++) {
-    console.log("leftColCenterX is " + leftColCenterX);
     let x = leftColCenterX + col * graphics.spacing * 3 / 2;
-    console.log("x is " + x);
     // Slight optimization based on the shape of the top of the board so we don't have to look at every row value.
     // The board is "squeezed" inward from both ends by an amount equal to the distance from the center column.
     let squeeze = Math.abs(col - SPAN);
@@ -156,7 +154,6 @@ function drawBoard() {
           fill = UNCONTROLLED_FILL;
           break;
       }
-      console.log("Drawing " + fill + " at (" + x + ", " + y + ")");
       if (fill !== NOT_ON_BOARD) {
         drawHex(x, y, graphics.hexSize, fill);
       }

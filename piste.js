@@ -20,6 +20,9 @@ const NUM_ROWS = 2 * (SPAN + MID_HEIGHT) + 3;
 // Index of the middle row of the board
 const MID_ROW = (NUM_ROWS - 1) / 2;
 
+// Number of rows on each side of the center row that aren't controlled by either player at the start of the game.
+const STARTING_UNCONTROLLED_DEPTH = 4;
+
 // We'll need this a lot for calculating the centers of hexes, so let's just calculate it once
 const SQRT3 = Math.sqrt(3);
 
@@ -95,7 +98,7 @@ function initializeGame() {
   }
 
   // Then mark the actual spaces with their owners or "no owner".
-  // First, the players' starting zones.
+  // First, the players' core spaces and the rows containing them.
   for (let offset = 0; offset <= SPAN; offset++) {
     // Left end of the upper player's row at this offset
     gameState.board[SPAN - offset][offset] = players[0].core;
@@ -115,14 +118,22 @@ function initializeGame() {
       gameState.board[col][lowerPlayerRow] = players[1].control;
     }
   }
-  // Now mark the intermediate area as unowned
+  // Now mark the intermediate area.
   for (let row = SPAN + 1; row < NUM_ROWS - SPAN - 1; row++) {
+    // Check who owns this row at the start of the game.
+    let distanceFromMiddleRow = row - MID_ROW;
+    let owner = UNCONTROLLED;
+    if (distanceFromMiddleRow < -STARTING_UNCONTROLLED_DEPTH) {
+      owner = players[0].control;
+    } else if (distanceFromMiddleRow > STARTING_UNCONTROLLED_DEPTH) {
+      owner = players[1].control;
+    }
     // Each row contains EITHER even-numbered OR odd-numbered columns.
     // Since column 0 starts at row number SPAN, and rows alternate between those that contain even-numbered columns
     // and those that contain odd-numbered columns, we can check which kind this row is by calculating the difference
     // between the current row number and SPAN, and taking the result mod 2.
     for (let col = (row - SPAN) % 2; col < NUM_COLS; col += 2) {
-      gameState.board[col][row] = UNCONTROLLED;
+      gameState.board[col][row] = owner;
     }
   }
 

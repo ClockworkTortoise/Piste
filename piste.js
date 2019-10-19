@@ -23,6 +23,9 @@ const MID_ROW = (NUM_ROWS - 1) / 2;
 // Number of rows on each side of the center row that aren't controlled by either player at the start of the game.
 const STARTING_UNCONTROLLED_DEPTH = 4;
 
+// Number of cards each player draws up to at the start of the game and the end of each of their turns
+const HAND_SIZE = 3;
+
 // We'll need this a lot for calculating the centers of hexes, so let's just calculate it once
 const SQRT3 = Math.sqrt(3);
 
@@ -43,12 +46,58 @@ var players = [
     coreFill: "#800000",
     fill: "#d00000",
   }
-]
+];
 // Marker and fill style for spaces not currently controlled by either player
 const UNCONTROLLED = -1;
 const UNCONTROLLED_FILL = "#404040";
 // Marker for entries which appear in the array of board spaces just to make it rectangular but don't actually represent spaces on the board
 const NOT_ON_BOARD = -99;
+
+// Data regarding the set of cards that exist in the game.
+var cards = [
+  {
+    name: "Jab",
+  },
+  {
+    name: "Thrust",
+  },
+  {
+    name: "Lunge",
+  },
+  {
+    name: "Slice",
+  },
+  {
+    name: "Slash",
+  },
+  {
+    name: "Hack",
+  },
+  {
+    name: "Chop",
+  },
+  {
+    name: "Whack",
+  },
+  {
+    name: "Bash",
+  },
+  {
+    name: "Crush",
+  },
+  {
+    name: "Feint",
+  },
+  {
+    name: "Block",
+  },
+  {
+    name: "Parry",
+  },
+  {
+    name: "Brace",
+  },
+];
 
 // We'll store a reference to the game canvas and its 2D drawing context in order to not have to call getElementById everywhere.
 var canvas;
@@ -65,6 +114,24 @@ var graphics = {
   hexSize: 32,
   // Font to use for labeling point values on board spaces
   boardLabelFont: "20px Arial",
+  // Font to use for card titles
+  cardTitleFont: "25px Arial",
+  // Horizontal offset from left side of board to left side of area indicating players' hands
+  handLeftBorderX: 600,
+  // Width of the space allocated for displaying each card in each player's hand
+  cardSpaceWidth: 200,
+  // Height of the space allocated for displaying each card in each player's hand
+  cardSpaceHeight: 300,
+  // Width that cards are displayed at when not actively selected
+  unselectedCardWidth: 160,
+  // Height that cards are displayed at when not actively selected
+  unselectedCardHeight: 240,
+  // Radius of the rounded corner used when displaying cards
+  cardCornerRadius: 10,
+  // Width of the black border displayed around each card
+  cardBorderWidth: 2,
+  // Height of the space allocated for the title at the top of each card
+  cardTitleHeight: 40,
 };
 
 // All game state, including who controls what parts of the board, cards in players' hands, whose turn it is, etc.
@@ -137,8 +204,19 @@ function initializeGame() {
     }
   }
 
-  // Now we're ready to display the game board!
+  // The board has now been initialized, so we can draw it here
   drawBoard();
+
+  // Draw starting hands
+  players[0].hand = [];
+  players[1].hand = [];
+  for (let i = 0; i < HAND_SIZE; i++) {
+    players[0].hand[i] = getRandomCard();
+    players[1].hand[i] = getRandomCard();
+  }
+  // Draw starting hands (in the other sense of "draw")
+  drawHand(0);
+  drawHand(1);
 }
 
 function drawBoard() {
@@ -228,4 +306,72 @@ function drawHex(centerX, centerY, sideLength, fill, label = "") {
     ctx.fillStyle = "white";
     ctx.fillText(label, centerX, centerY);
   }
+}
+
+// Draws the given player's hand (in the graphics sense of the word "draw")
+function drawHand(playerNum) {
+  let player = players[playerNum];
+  let handTopY = graphics.margin + playerNum * (graphics.cardSpaceHeight + graphics.margin);
+  for (let i = 0; i < player.hand.length; i++) {
+    drawCard(player.hand[i], playerNum, graphics.handLeftBorderX + i * graphics.cardSpaceWidth, handTopY);
+  }
+}
+
+// Draws (in the graphical sense) a specific card in a space whose upper-left corner is at the given coordinates.
+// Player number is used to determine the orientation of the illustration of the card's effects.
+function drawCard(card, playerNum, x, y, isSelected = false) {
+  // Use a shorter name for this radius to make the code more readable
+  let radius = graphics.cardCornerRadius;
+
+  let width = graphics.cardSpaceWidth;
+  let height = graphics.cardSpaceHeight;
+  let leftX = x;
+  let rightX = x + width;
+  let topY = y;
+  let bottomY = y + height;
+  if (!isSelected) {
+    // Adjust width/height, and x/y coordinates of upper left corner of card display area,
+    // so as to put an unselected card in the center of the space allocated for it
+    width = graphics.unselectedCardWidth;
+    height = graphics.unselectedCardHeight;
+
+    let horizontalMargin = (graphics.cardSpaceWidth - graphics.unselectedCardWidth) / 2;
+    leftX += horizontalMargin;
+    rightX -= horizontalMargin;
+    let verticalMargin = (graphics.cardSpaceHeight - graphics.unselectedCardHeight) / 2;
+    topY += verticalMargin;
+    bottomY -= verticalMargin;
+  }
+
+  // Fill in card and draw outer border
+  ctx.beginPath();
+  ctx.arc(leftX + radius, topY + radius, radius, Math.PI, Math.PI * 3 / 2);
+  ctx.arc(rightX - radius, topY + radius, radius, Math.PI * 3 / 2, 0);
+  ctx.arc(rightX - radius, bottomY - radius, radius, 0, Math.PI / 2);
+  ctx.arc(leftX + radius, bottomY - radius, radius, Math.PI / 2, Math.PI);
+  ctx.closePath();
+  ctx.fillStyle = "white";
+  ctx.fill();
+  ctx.style = "black";
+  ctx.lineWidth = graphics.cardBorderWidth;
+  ctx.stroke();
+
+  // Add title
+  ctx.beginPath();
+  ctx.moveTo(leftX, topY + graphics.cardTitleHeight);
+  ctx.lineTo(rightX, topY + graphics.cardTitleHeight);
+  ctx.stroke();
+  ctx.font = graphics.cardTitleFont;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "black";
+  ctx.fillText(card.name, (leftX + rightX) / 2, topY + graphics.cardTitleHeight / 2);
+}
+
+// Creates and returns a random card.
+// (This game doesn't use a deck; each card is equally likely to be generated
+// regardless of how many of it are already in players' hands or were played recently.)
+function getRandomCard() {
+  let cardIndex = Math.floor(Math.random() * cards.length);
+  return cards[cardIndex];
 }

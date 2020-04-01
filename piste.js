@@ -311,10 +311,22 @@ function drawHex(centerX, centerY, sideLength, fill, label = "") {
 // Draws the given player's hand (in the graphics sense of the word "draw")
 function drawHand(playerNum) {
   let player = players[playerNum];
-  let handTopY = graphics.margin + playerNum * (graphics.cardSpaceHeight + graphics.margin);
+  let topY = handTopY(playerNum);
   for (let i = 0; i < player.hand.length; i++) {
-    drawCard(player.hand[i], playerNum, graphics.handLeftBorderX + i * graphics.cardSpaceWidth, handTopY);
+    drawCard(player.hand[i], playerNum, cardLeftBorderX(i), topY);
   }
+}
+
+function cardLeftBorderX(cardIndex) {
+  return graphics.handLeftBorderX + cardIndex * (graphics.cardSpaceWidth + graphics.margin);
+}
+
+function handRightX() {
+  return cardLeftBorderX(HAND_SIZE);
+}
+
+function handTopY(playerNum) {
+  return graphics.margin + playerNum * (graphics.cardSpaceHeight + graphics.margin);
 }
 
 // Draws (in the graphical sense) a specific card in a space whose upper-left corner is at the given coordinates.

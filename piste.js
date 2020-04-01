@@ -39,7 +39,7 @@ var players = [
     coreFill: "#000080",
     fill: "#0000d0",
   },
-  // players[1] is the player that starts from the top of the board
+  // players[1] is the player that starts from the bottom of the board
   {
     core: 11,
     control: 1,

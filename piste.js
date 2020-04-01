@@ -143,6 +143,8 @@ var gameState = {
   board: [],
   // The player whose turn it is (will be randomly set to 0 or 1 at the start of the game)
   activePlayer: -1,
+  // Index of the card which the active player currently has selected in their hand (-1 for "no card selected")
+  selectedCard: -1,
 };
 
 // Creates the entire game for the first time, including initializing certain things.
@@ -225,6 +227,55 @@ function initializeGame() {
   // Choose the first player
   gameState.activePlayer = Math.floor(Math.random() * 2);
   markActivePlayer();
+}
+
+function handleClick(event) {
+  // If the click was in a card space belonging to the active player, select or deselect that card
+  // offsetX, offsetY
+  let cardClicked = whichCard(event.offsetX, event.offsetY);
+  if (cardClicked != null) {
+    if (cardClicked.player === gameState.activePlayer) {
+      let previouslySelectedCard = gameState.selectedCard;
+      // If the player clicked a card they had previously selected, we'll deselect it.
+      // If they clicked on a different card, we'll switch their selection to that card.
+      // In either case, if they previously had a card selected, then we'll deselect it.
+      if (previouslySelectedCard !== -1) {
+        drawCard(players[gameState.activePlayer].hand[previouslySelectedCard],
+                 gameState.activePlayer,
+                 cardLeftBorderX(previouslySelectedCard),
+                 handTopY(gameState.activePlayer));
+        gameState.selectedCard = -1;
+      }
+      // We need to select a card only if the player didn't click on their previously selected card
+      if (cardClicked.cardIndex != previouslySelectedCard) {
+        drawCard(players[gameState.activePlayer].hand[cardClicked.cardIndex],
+                 gameState.activePlayer,
+                 cardLeftBorderX(cardClicked.cardIndex),
+                 handTopY(gameState.activePlayer),
+                 true);
+        gameState.selectedCard = cardClicked.cardIndex;
+      }
+    }
+    // If a card was clicked on, then we don't need to check if anything else was clicked on,
+    // so we can just return out of the method here
+    return;
+  }
+}
+
+// Determines whether the given coordinates are in a card space.
+// If so, returns an object indicating which player and card the coordinates belong to;
+// otherwise, returns null.
+function whichCard(x, y) {
+  let player = Math.floor((y - graphics.margin) / (graphics.cardSpaceHeight + graphics.margin));
+  if (player < 0 || player > 1) {
+    return null;
+  }
+  let cardIndex = Math.floor((x - graphics.handLeftBorderX) / (graphics.cardSpaceWidth + graphics.margin));
+  if (cardIndex < 0 || cardIndex >= HAND_SIZE) {
+    return null;
+  }
+
+  return {player: player, cardIndex: cardIndex};
 }
 
 function drawBoard() {
@@ -357,15 +408,21 @@ function handTopY(playerNum) {
 // Draws (in the graphical sense) a specific card in a space whose upper-left corner is at the given coordinates.
 // Player number is used to determine the orientation of the illustration of the card's effects.
 function drawCard(card, playerNum, x, y, isSelected = false) {
+  // Clear out anything that might have been in the card slot before
+  ctx.clearRect(x, y, graphics.cardSpaceWidth, graphics.cardSpaceHeight);
+
   // Use a shorter name for this radius to make the code more readable
   let radius = graphics.cardCornerRadius;
 
-  let width = graphics.cardSpaceWidth;
-  let height = graphics.cardSpaceHeight;
-  let leftX = x;
-  let rightX = x + width;
-  let topY = y;
-  let bottomY = y + height;
+  // Since lines are centered on the coordinates used, the card border will leak out of the card space slightly
+  // unless we shift the coordinates to be slightly narrower than the card space.
+  let width = graphics.cardSpaceWidth - graphics.cardBorderWidth;
+  let height = graphics.cardSpaceHeight - graphics.cardBorderWidth;
+  let leftX = x + graphics.cardBorderWidth / 2;
+  let rightX = leftX + width;
+  let topY = y + graphics.cardBorderWidth / 2;
+  let bottomY = topY + height;
+
   if (!isSelected) {
     // Adjust width/height, and x/y coordinates of upper left corner of card display area,
     // so as to put an unselected card in the center of the space allocated for it

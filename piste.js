@@ -134,7 +134,7 @@ var graphics = {
   cardTitleHeight: 40,
 };
 
-// All game state, including who controls what parts of the board, cards in players' hands, whose turn it is, etc.
+// All game state that's not specific to a particular player, including who controls what parts of the board, whose turn it is, etc.
 var gameState = {
   // This will be initialized as a rectangular array where the column is the horizontal coordinate
   // and the row is the vertical coordinate

@@ -105,7 +105,7 @@ var ctx;
 
 // Data relating to how the game state should be drawn
 var graphics = {
-  // Amount of empty space in the canvas around the outside of the board
+  // Amount of empty space in the canvas around the outside of the board, and between different game elements
   margin: 15,
   // Length of the side of the area allocated for a board space INCLUDING its share of the border between spaces
   spacing: 35,

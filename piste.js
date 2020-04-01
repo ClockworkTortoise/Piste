@@ -116,6 +116,8 @@ var graphics = {
   boardLabelFont: "20px Arial",
   // Font to use for card titles
   cardTitleFont: "25px Arial",
+  // Font to use for the "This player's turn" label
+  activePlayerLabelFont: "40px Arial",
   // Horizontal offset from left side of board to left side of area indicating players' hands
   handLeftBorderX: 600,
   // Width of the space allocated for displaying each card in each player's hand
@@ -139,6 +141,8 @@ var gameState = {
   // This will be initialized as a rectangular array where the column is the first coordinate
   // and the row is the second coordinate
   board: [],
+  // The player whose turn it is (will be randomly set to 0 or 1 at the start of the game)
+  activePlayer: -1,
 };
 
 // Creates the entire game for the first time, including initializing certain things.
@@ -217,6 +221,10 @@ function initializeGame() {
   // Draw starting hands (in the other sense of "draw")
   drawHand(0);
   drawHand(1);
+
+  // Choose the first player
+  gameState.activePlayer = Math.floor(Math.random() * 2);
+  markActivePlayer();
 }
 
 function drawBoard() {
@@ -306,6 +314,23 @@ function drawHex(centerX, centerY, sideLength, fill, label = "") {
     ctx.fillStyle = "white";
     ctx.fillText(label, centerX, centerY);
   }
+}
+
+// Draws an indication of whose turn it is (and erases any previous indication of it being the other player's turn)
+function markActivePlayer() {
+  ctx.font = graphics.activePlayerLabelFont;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+
+  let handRightBorderX = handRightX();
+
+  // Mark active player
+  ctx.fillStyle = players[gameState.activePlayer].coreFill;
+  let handMidY = handTopY(gameState.activePlayer) + graphics.cardSpaceHeight / 2;
+  ctx.fillText("← Your turn", handRightBorderX, handMidY);
+
+  // Clear mark for inactive player
+  ctx.clearRect(handRightBorderX, handTopY(1 - gameState.activePlayer), canvas.width - handRightBorderX, graphics.cardSpaceHeight);
 }
 
 // Draws the given player's hand (in the graphics sense of the word "draw")

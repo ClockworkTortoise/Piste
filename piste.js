@@ -283,10 +283,7 @@ function drawBoard() {
   let topRowCenterY = graphics.margin + graphics.spacing * SQRT3 / 2;
   for (let col = 0; col < NUM_COLS; col++) {
     let x = leftColCenterX + col * graphics.spacing * 3 / 2;
-    // Slight optimization based on the shape of the top of the board so we don't have to look at every row value.
-    // The board is "squeezed" inward from both ends by an amount equal to the distance from the center column.
-    let squeeze = Math.abs(col - SPAN);
-    for (let row = squeeze; row < NUM_ROWS - squeeze; row += 2) {
+    for (let row = topRowForColumn(col); row < rowLimitForColumn(col); row += 2) {
       let y = topRowCenterY + row * graphics.spacing * SQRT3 / 2;
       let fill = NOT_ON_BOARD;
       switch(gameState.board[col][row]) {
@@ -322,6 +319,17 @@ function drawBoard() {
       }
     }
   }
+}
+
+// Returns index of the highest row on the board in the given column
+function topRowForColumn(col) {
+  return Math.abs(col - SPAN);
+}
+
+// Returns 1 plus the index of the lowest row on the board in the given column
+// (so that the standard for loop paradigm "index < limit" can be used)
+function rowLimitForColumn(col) {
+  return NUM_ROWS - Math.abs(col - SPAN);
 }
 
 // Returns the score value associated with a particular board space.

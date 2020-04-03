@@ -260,6 +260,19 @@ function handleClick(event) {
     // so we can just return out of the method here
     return;
   }
+
+  let spaceClicked = whichBoardSpace(event.offsetX, event.offsetY);
+  if (spaceClicked !== null) {
+    // TODO: this is just a placeholder to verify that we're correctly calculating board spaces; remove this when adding actual "click on space" functionality
+    drawBoard();
+    ctx.beginPath();
+    ctx.arc(colCenterX(spaceClicked.col), rowCenterY(spaceClicked.row), graphics.hexSize * 0.6, 0, 2 * Math.PI);
+    ctx.strokeStyle = "#ff00ff";
+    ctx.stroke();
+
+    // Again, if a board space was clicked on, then there's no further need to determine whether something interesting was clicked on
+    return;
+  }
 }
 
 // Determines whether the given coordinates are in a card space.
@@ -276,6 +289,79 @@ function whichCard(x, y) {
   }
 
   return {player: player, cardIndex: cardIndex};
+}
+
+// Determines whether the given coordinates are inside a board space.
+// If so, returns an object indicating the space's row and column.
+// Otherwise, returns null.
+function whichBoardSpace(x, y) {
+  // The "half-row" containing the given coordinates,
+  // where half-row n contains the upper half of the spaces in row n
+  // and the lower half of the spaces in row n-1
+  let halfRow = Math.floor((y - graphics.margin) * 2 / (graphics.spacing * SQRT3));
+  // The spaces in this half-row will look something like this:
+  //  __    __    __    __    __    __    __
+  // /  \__/  \__/  \__/  \__/  \__/  \__/  \
+  // So we can divide the half-row into equally wide segments which follow a pattern of
+  // "divided in half along an upward slope, lower row, lower row, divided along a downward slope, upper row, upper row"
+  // (or it might start with a downward slope, depending on whether the index of our half-row is odd or even)
+  // We'll call these segments "column fragments".
+  let columnFragment = Math.floor((x - graphics.margin) * 2 / graphics.spacing);
+
+  // We'll figure out which column contains the nearest space, but we'll store it in a variable rather than just returning,
+  // so that we can determine whether the point is in the space itself rather than in the border between spaces.
+  let col;
+
+  // The column fragments which are divided along a diagonal line are the ones which are a multiple of 3.
+  // So if the column fragment is NOT a multiple of 3, then the column is just the column fragment divided by 3 rounded down.
+  if (columnFragment % 3 !== 0) {
+    col = Math.floor(columnFragment / 3);
+  } else {
+    // If the column fragment is a multiple of 3, then two columns use that column fragment,
+    // and that fragment is divided by a diagonal line.
+    // Of the two columns using the fragment, the one that's farther right has index equal to one-third of the column fragment.
+    let rightwardColumn = columnFragment / 3;
+    // In even half-rows (such as the topmost one), the dividing line is from lower-left to upper-right when the rightward column is column SPAN
+    // or has the same parity (odd/even), whereas the line is from upper-left to lower-right if the column has opposite parity to SPAN.
+    // In odd half-rows, the opposite is true.
+    let dividerGoesUpward = (halfRow + SPAN - rightwardColumn) % 2 === 0;
+    // Now we'll calculate the x-coordinate of the dividing line at the target y-coordinate,
+    // and compare it to our target x-coordinate to determine whether we're in the leftward or rightward column.
+    let fragmentLeftX = colCenterX(rightwardColumn) - graphics.spacing;
+    let fragmentRightX = fragmentLeftX + graphics.spacing / 2;
+    let halfRowTopY = rowCenterY(halfRow - 1);
+    let halfRowBottomY = rowCenterY(halfRow);
+    let borderAtTop = dividerGoesUpward ? fragmentRightX : fragmentLeftX;
+    let borderAtBottom = dividerGoesUpward ? fragmentLeftX : fragmentRightX;
+    let borderAtTargetY = borderAtTop + (borderAtBottom - borderAtTop) * (y - halfRowTopY) / (halfRowBottomY - halfRowTopY);
+    col = x < borderAtTargetY ? rightwardColumn - 1 : rightwardColumn;
+  }
+
+  if (col < 0 || col >= NUM_COLS) {
+    return null;
+  }
+
+  // We know that the space's row is either the same as the half-row or one less than it.
+  // Also, every board space has the same parity for the sum of the row number plus the column number.
+  // (For example, if there's a board space at column 3 and row 8, then the sum of the row number plus the column number for that space is 11,
+  // so the sum of the row and column for every board space is odd.)
+  // We know there's a space at row 0 and column SPAN, so we'll compare parity to that.
+  let netOffsetFromTopSpaceIfHalfRow = halfRow + col - SPAN;
+  let parityMismatch = netOffsetFromTopSpaceIfHalfRow % 2;
+  let row = halfRow - parityMismatch;
+
+  if (row < topRowForColumn(col) || row >= rowLimitForColumn(col)) {
+    return null;
+  }
+
+  // If we reach this point, then the target coordinates are EITHER in a board space at the given column and row,
+  // OR they're in the border around that board space.
+  encloseHex(colCenterX(col), rowCenterY(row), graphics.hexSize);
+  if (ctx.isPointInPath(x, y)) {
+    return {col: col, row: row};
+  } else {
+    return null;
+  }
 }
 
 function drawBoard() {

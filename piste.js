@@ -279,12 +279,10 @@ function whichCard(x, y) {
 }
 
 function drawBoard() {
-  let leftColCenterX = graphics.margin + graphics.spacing;
-  let topRowCenterY = graphics.margin + graphics.spacing * SQRT3 / 2;
   for (let col = 0; col < NUM_COLS; col++) {
-    let x = leftColCenterX + col * graphics.spacing * 3 / 2;
+    let x = colCenterX(col);
     for (let row = topRowForColumn(col); row < rowLimitForColumn(col); row += 2) {
-      let y = topRowCenterY + row * graphics.spacing * SQRT3 / 2;
+      let y = rowCenterY(row);
       let fill = NOT_ON_BOARD;
       switch(gameState.board[col][row]) {
         case players[0].core:
@@ -353,6 +351,14 @@ function getScoreValue(col, row) {
     }
   }
   return score;
+}
+
+function colCenterX(col) {
+  return graphics.margin + graphics.spacing + col * graphics.spacing * 3 / 2;
+}
+
+function rowCenterY(row) {
+  return graphics.margin + (row + 1) * graphics.spacing * SQRT3 / 2;
 }
 
 function drawHex(centerX, centerY, sideLength, fill, label = "") {

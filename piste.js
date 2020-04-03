@@ -446,7 +446,7 @@ function drawCard(card, playerNum, x, y, isSelected = false) {
   ctx.closePath();
   ctx.fillStyle = "white";
   ctx.fill();
-  ctx.style = "black";
+  ctx.strokeStyle = "black";
   ctx.lineWidth = graphics.cardBorderWidth;
   ctx.stroke();
 

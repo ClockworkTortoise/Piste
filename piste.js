@@ -361,7 +361,8 @@ function rowCenterY(row) {
   return graphics.margin + (row + 1) * graphics.spacing * SQRT3 / 2;
 }
 
-function drawHex(centerX, centerY, sideLength, fill, label = "") {
+// Causes the drawing context object to trace the border of a hexagon with the given center and size
+function encloseHex(centerX, centerY, sideLength) {
   ctx.beginPath();
   ctx.moveTo(centerX + sideLength, centerY);
   for (let i = 1; i < 6; i++) {
@@ -369,6 +370,11 @@ function drawHex(centerX, centerY, sideLength, fill, label = "") {
     ctx.lineTo(centerX + sideLength * Math.cos(angle), centerY + sideLength * Math.sin(angle));
   }
   ctx.closePath();
+}
+
+// Draws a hexagon with the given center, size, fill style, and optional label
+function drawHex(centerX, centerY, sideLength, fill, label = "") {
+  encloseHex(centerX, centerY, sideLength);
   ctx.fillStyle = fill;
   ctx.fill();
 

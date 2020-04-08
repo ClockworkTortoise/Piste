@@ -544,6 +544,5 @@ function getRandomCard() {
   for (let i = 0; i < baseCard.capture.length; i++) {
     card.capture[i] = [-baseCard.capture[i][0], baseCard.capture[i][1]];
   }
-console.log(card);
   return card;
 }

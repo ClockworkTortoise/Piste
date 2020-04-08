@@ -53,52 +53,6 @@ const UNCONTROLLED_FILL = "#404040";
 // Marker for entries which appear in the array of board spaces just to make it rectangular but don't actually represent spaces on the board
 const NOT_ON_BOARD = -99;
 
-// Data regarding the set of cards that exist in the game.
-var cards = [
-  {
-    name: "Jab",
-  },
-  {
-    name: "Thrust",
-  },
-  {
-    name: "Lunge",
-  },
-  {
-    name: "Slice",
-  },
-  {
-    name: "Slash",
-  },
-  {
-    name: "Hack",
-  },
-  {
-    name: "Chop",
-  },
-  {
-    name: "Whack",
-  },
-  {
-    name: "Bash",
-  },
-  {
-    name: "Crush",
-  },
-  {
-    name: "Feint",
-  },
-  {
-    name: "Block",
-  },
-  {
-    name: "Parry",
-  },
-  {
-    name: "Brace",
-  },
-];
-
 // We'll store a reference to the game canvas and its 2D drawing context in order to not have to call getElementById everywhere.
 var canvas;
 var ctx;
@@ -575,5 +529,21 @@ function drawCard(card, playerNum, x, y, isSelected = false) {
 // regardless of how many of it are already in players' hands or were played recently.)
 function getRandomCard() {
   let cardIndex = Math.floor(Math.random() * cards.length);
-  return cards[cardIndex];
+  let baseCard = cards[cardIndex];
+
+  // Return "normal" version of card if there's only one version, or with 50% chance if there are two versions
+  if (baseCard.names.length === 1 || Math.random() < 0.5) {
+    return {name: baseCard.names[0], required: baseCard.required, capture: baseCard.capture};
+  }
+
+  // Otherwise, we'll need to copy the arrays to generate the mirror-reflected version
+  let card = {name: baseCard.names[1], required: [], capture: []};
+  for (let i = 0; i < baseCard.required.length; i++) {
+    card.required[i] = [-baseCard.required[i][0], baseCard.required[i][1]];
+  }
+  for (let i = 0; i < baseCard.capture.length; i++) {
+    card.capture[i] = [-baseCard.capture[i][0], baseCard.capture[i][1]];
+  }
+console.log(card);
+  return card;
 }

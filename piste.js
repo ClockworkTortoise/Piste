@@ -139,7 +139,9 @@ var graphics = {
 // All game state that's not specific to a particular player, including who controls what parts of the board, whose turn it is, etc.
 var gameState = {
   // This will be initialized as a rectangular array where the column is the first coordinate
-  // and the row is the second coordinate
+  // and the row is the second coordinate. The game uses a "doubled" coordinate system, as described here:
+  // https://www.redblobgames.com/grids/hexagons/#coordinates-doubled
+  // The leftmost column is numbered 0, as is the row containing the space at the very top of the board.
   board: [],
   // The player whose turn it is (will be randomly set to 0 or 1 at the start of the game)
   activePlayer: -1,

@@ -477,7 +477,7 @@ function drawCard(card, playerNum, x, y, isSelected = false) {
   let radius = graphics.cardCornerRadius;
 
   // Since lines are centered on the coordinates used, the card border will leak out of the card space slightly
-  // unless we shift the coordinates to be slightly narrower than the card space.
+  // if we set the coordinates to be all the way at the outer edges of the space allocated for the card.
   let width = graphics.cardSpaceWidth - graphics.cardBorderWidth;
   let height = graphics.cardSpaceHeight - graphics.cardBorderWidth;
   let leftX = x + graphics.cardBorderWidth / 2;
@@ -499,7 +499,7 @@ function drawCard(card, playerNum, x, y, isSelected = false) {
     bottomY -= verticalMargin;
   }
 
-  // Fill in card and draw outer border
+  // Fill in card background and draw outer border
   ctx.beginPath();
   ctx.arc(leftX + radius, topY + radius, radius, Math.PI, Math.PI * 3 / 2);
   ctx.arc(rightX - radius, topY + radius, radius, Math.PI * 3 / 2, 0);

@@ -529,20 +529,5 @@ function drawCard(card, playerNum, x, y, isSelected = false) {
 // regardless of how many of it are already in players' hands or were played recently.)
 function getRandomCard() {
   let cardIndex = Math.floor(Math.random() * cards.length);
-  let baseCard = cards[cardIndex];
-
-  // Return "normal" version of card if there's only one version, or with 50% chance if there are two versions
-  if (baseCard.names.length === 1 || Math.random() < 0.5) {
-    return {name: baseCard.names[0], required: baseCard.required, capture: baseCard.capture};
-  }
-
-  // Otherwise, we'll need to copy the arrays to generate the mirror-reflected version
-  let card = {name: baseCard.names[1], required: [], capture: []};
-  for (let i = 0; i < baseCard.required.length; i++) {
-    card.required[i] = [-baseCard.required[i][0], baseCard.required[i][1]];
-  }
-  for (let i = 0; i < baseCard.capture.length; i++) {
-    card.capture[i] = [-baseCard.capture[i][0], baseCard.capture[i][1]];
-  }
-  return card;
+  return cards[cardIndex];
 }

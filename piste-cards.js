@@ -352,3 +352,46 @@ var cards = [
     ],
   },
 ];
+
+// Calculates some values relating to the size of the effect of the given card.
+// Returns an object with the following properties:
+//   "columnCount": number of columns needed to display the card (contained within or between the card's "required" or "capture" spaces)
+//   "rowCount": number of rows needed in the same sense
+//   "columnOffset": column index of the card's focus space (which would have coordinates [0, 0] in the "required" and "capture" lists)
+//       relative to the leftmost edge of the effect, where the leftmost column used is 0, the rightmost is columnCount-1, etc
+//   "rowOffset": row index of the focus space where the topmost row used is 0, the lowest is rowCount-1, etc
+// The columnOffset and rowOffset values indicate the offset in the version of the card used by the top player.
+// The card will be rotated 180 degrees for the bottom player, so if you want to use those values for that player,
+// you'll need to use columnCount-1-columnOffset and rowCount-1-rowOffset (or else count from the lower-right instead of the upper-left).
+function cardDimensions(card) {
+  let spacesUsed = card.capture.concat(card.required);
+
+  let leftEdge = spacesUsed[0][0];
+  let rightEdge = leftEdge;
+  let topEdge = spacesUsed[0][1];
+  let bottomEdge = topEdge;
+  for (const [col, row] of spacesUsed){
+    if (col < leftEdge) {
+      leftEdge = col;
+    }
+    if (col > rightEdge) {
+      rightEdge = col;
+    }
+
+    if (row < topEdge) {
+      topEdge = row;
+    }
+    if (row > bottomEdge) {
+      bottomEdge = row;
+    }
+  }
+
+  return {
+    columnCount: rightEdge - leftEdge + 1,
+    rowCount: bottomEdge - topEdge + 1,
+    // This results in an offset of negative zero if the card doesn't use anything above or to the left of the focus space,
+    // which seems a little weird but should be okay (since even strict equality considers -0 equal to +0)
+    columnOffset: -leftEdge,
+    rowOffset: -topEdge
+  };
+}

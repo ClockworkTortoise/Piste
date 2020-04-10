@@ -392,6 +392,6 @@ function cardDimensions(card) {
     // This results in an offset of negative zero if the card doesn't use anything above or to the left of the focus space,
     // which seems a little weird but should be okay (since even strict equality considers -0 equal to +0)
     columnOffset: -leftEdge,
-    rowOffset: -topEdge
+    rowOffset: -topEdge,
   };
 }

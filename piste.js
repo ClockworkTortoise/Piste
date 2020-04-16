@@ -52,7 +52,7 @@ var players = [
 ];
 // Marker and fill style for spaces not currently controlled by either player
 const UNCONTROLLED = -1;
-const UNCONTROLLED_FILL = "#404040";
+const UNCONTROLLED_FILL = "#5a5a5a";
 // Marker for entries which appear in the array of board spaces just to make it rectangular but don't actually represent spaces on the board
 const NOT_ON_BOARD = -99;
 

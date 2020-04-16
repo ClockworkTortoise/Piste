@@ -415,13 +415,13 @@ function encloseHex(centerX, centerY, sideLength) {
 }
 
 // Draws a hexagon with the given center, size, fill style, and optional label
-function drawHex(centerX, centerY, sideLength, fill, label = null) {
+function drawHex(centerX, centerY, sideLength, fill, label = null, labelFont = graphics.boardLabelFont) {
   encloseHex(centerX, centerY, sideLength);
   ctx.fillStyle = fill;
   ctx.fill();
 
   if (label !== null) {
-    ctx.font = graphics.boardLabelFont;
+    ctx.font = labelFont;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillStyle = "white";

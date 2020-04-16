@@ -31,6 +31,10 @@ const SQRT3 = Math.sqrt(3);
 
 // Data for the two players.
 // "core" and "control" are the flags used to indicate the core spaces and other controlled spaces for each player.
+// The various types of "fill" values are used as follows:
+//   coreFill: the player's core spaces on the board
+//   fill: board spaces the player controls, other than their core spaces; also, capture spaces in card effects
+//   requiredFill: spaces in card effects that must be already controlled in order to play the card
 var players = [
   // players[0] is the player that starts from the top of the board
   {
@@ -38,6 +42,7 @@ var players = [
     control: 0,
     coreFill: "#000080",
     fill: "#0000d0",
+    requiredFill: "#000000",
   },
   // players[1] is the player that starts from the bottom of the board
   {
@@ -45,6 +50,7 @@ var players = [
     control: 1,
     coreFill: "#800000",
     fill: "#d00000",
+    requiredFill: "#000000",
   }
 ];
 // Marker and fill style for spaces not currently controlled by either player
@@ -72,6 +78,8 @@ var graphics = {
   cardTitleFont: "25px Arial",
   // Font to use for the "This player's turn" label
   activePlayerLabelFont: "40px Arial",
+  // General font class to use for card effect labels (the size will be determined by the size of the hexes in the effect)
+  cardEffectLabelFontType: "Arial",
   // Horizontal offset from left side of board to left side of area indicating players' hands
   handLeftBorderX: 600,
   // Width of the space allocated for displaying each card in each player's hand
@@ -88,6 +96,8 @@ var graphics = {
   cardBorderWidth: 2,
   // Height of the space allocated for the title at the top of each card
   cardTitleHeight: 40,
+  // Minimum amount of space allowed between the border of a card and the visual depiction of its effect
+  cardInternalMargin: 10,
 };
 
 // All game state that's not specific to a particular player, including who controls what parts of the board, whose turn it is, etc.
@@ -468,7 +478,7 @@ function handTopY(playerNum) {
 }
 
 // Draws (in the graphical sense) a specific card in a space whose upper-left corner is at the given coordinates.
-// Player number is used to determine the orientation of the illustration of the card's effects.
+// Player number is used to determine the orientation and color of the illustration of the card's effects.
 function drawCard(card, playerNum, x, y, isSelected = false) {
   // Clear out anything that might have been in the card slot before
   ctx.clearRect(x, y, graphics.cardSpaceWidth, graphics.cardSpaceHeight);
@@ -522,6 +532,56 @@ function drawCard(card, playerNum, x, y, isSelected = false) {
   ctx.textBaseline = "middle";
   ctx.fillStyle = "black";
   ctx.fillText(card.name, (leftX + rightX) / 2, topY + graphics.cardTitleHeight / 2);
+
+  // Calculate the size of the space available for the card's effect, and draw that
+  let effectWidth = width - 2 * graphics.cardInternalMargin;
+  let effectHeight = height - graphics.cardTitleHeight - 2 * graphics.cardInternalMargin;
+  drawCardEffect(card, playerNum, leftX + graphics.cardInternalMargin, topY + graphics.cardInternalMargin + graphics.cardTitleHeight, effectWidth, effectHeight);
+}
+
+// Creates a visual depiction of the effect of the given card, as played by the given player,
+// such that this depiction is entirely contained within the given rectangle.
+function drawCardEffect(card, playerNum, leftX, topY, width, height) {
+  // First, determine how large we can draw each space in the card's effect,
+  // by determining how many times the side length we need in width and height.
+  let hexSpaceSideWidthsUsed = (3 * card.dimensions.columnCount + 1) / 2;
+  let hexSpaceSideHeightsUsed = (card.dimensions.rowCount + 1) * SQRT3 / 2;
+  // The spacing in the effect should be small enough to fit the effect both horizontally and vertically,
+  // and shouldn't be larger than the spacing on the board.
+  let hexSpaceSide = Math.min(width / hexSpaceSideWidthsUsed, height / hexSpaceSideHeightsUsed, graphics.spacing);
+  // We'll make the gap between spaces in this graphic be the same size proportional to the spaces
+  // as the gap between spaces on the board
+  let hexGraphicSide = hexSpaceSide * graphics.hexSize / graphics.spacing;
+  // Font should be large enough that the capture symbol is prominent in the hex, but small enough that it fits.
+  // Since the diameter of the hex is larger than its side length, this can be significantly larger than the side length.
+  let fontSize = hexGraphicSide * 1.5;
+  let font = fontSize + "px " + graphics.cardEffectLabelFontType;
+
+  // Calculate the horizontal distance between consecutive columns and the vertical distance between consecutive rows.
+  // Note that if we're drawing the card for the top player, column offsets increase to the right and row offsets increase downward.
+  // For the bottom player, the card is rotated 180 degrees, so the opposite is true.
+  let cardOrientationMultiplier = playerNum === 0 ? 1 : -1;
+  let perColumnDeltaX = cardOrientationMultiplier * hexSpaceSide * 3 / 2;
+  let perRowDeltaY = cardOrientationMultiplier * hexSpaceSide * SQRT3 / 2;
+
+  // Identify where the center of the focus space at [0, 0] should be,
+  // accounting for which player is playing the card by using perColumnDeltaX and perRowDeltaY.
+  // We also want to make sure that the graphic is centered in the space allocated for it.
+  let colCenterNum = (card.dimensions.colMin + card.dimensions.colMax) / 2;
+  let rowCenterNum = (card.dimensions.rowMin + card.dimensions.rowMax) / 2;
+  let centerX = leftX + width / 2;
+  let focusCenterX = centerX - perColumnDeltaX * colCenterNum;
+  let centerY = topY + height / 2;
+  let focusCenterY = centerY - perRowDeltaY * rowCenterNum;
+
+  // We'll draw "capture" spaces before "required" spaces, so that just in case some card has the same space in both lists,
+  // the "required" graphic will draw over the "capture" graphic (since the game will treat it as required, making it effectively a non-capture space)
+  for (const [col, row] of card.capture) {
+    drawHex(focusCenterX + col * perColumnDeltaX, focusCenterY + row * perRowDeltaY, hexGraphicSide, players[playerNum].fill, "+", font);
+  }
+  for (const [col, row] of card.required) {
+    drawHex(focusCenterX + col * perColumnDeltaX, focusCenterY + row * perRowDeltaY, hexGraphicSide, players[playerNum].requiredFill);
+  }
 }
 
 // Creates and returns a random card.

@@ -31,10 +31,9 @@ const SQRT3 = Math.sqrt(3);
 
 // Data for the two players.
 // "core" and "control" are the flags used to indicate the core spaces and other controlled spaces for each player.
-// The various types of "fill" values are used as follows:
-//   coreFill: the player's core spaces on the board
-//   fill: board spaces the player controls, other than their core spaces; also, capture spaces in card effects
-//   requiredFill: spaces in card effects that must be already controlled in order to play the card
+// "coreFill" is the color used for the player's core spaces on the board.
+// "fill" is the color used for the player's non-core spaces on the board, and most other things where we want to indicate a specific player via color.
+// A "hand" property will be added later which will be an array of cards in the player's hand.
 var players = [
   // players[0] is the player that starts from the top of the board
   {
@@ -42,7 +41,6 @@ var players = [
     control: 0,
     coreFill: "#000080",
     fill: "#0000d0",
-    requiredFill: "#000000",
   },
   // players[1] is the player that starts from the bottom of the board
   {
@@ -50,7 +48,6 @@ var players = [
     control: 1,
     coreFill: "#800000",
     fill: "#d00000",
-    requiredFill: "#000000",
   }
 ];
 // Marker and fill style for spaces not currently controlled by either player
@@ -579,10 +576,10 @@ function drawCardEffect(card, playerNum, leftX, topY, width, height) {
   // We'll draw "capture" spaces before "required" spaces, so that just in case some card has the same space in both lists,
   // the "required" graphic will draw over the "capture" graphic (since the game will treat it as required, making it effectively a non-capture space)
   for (const [col, row] of card.capture) {
-    drawHex(focusCenterX + col * perColumnDeltaX, focusCenterY + row * perRowDeltaY, hexGraphicSide, players[playerNum].fill, "+", font);
+    drawHex(focusCenterX + col * perColumnDeltaX, focusCenterY + row * perRowDeltaY, hexGraphicSide, UNCONTROLLED_FILL, "+", font, players[playerNum].fill);
   }
   for (const [col, row] of card.required) {
-    drawHex(focusCenterX + col * perColumnDeltaX, focusCenterY + row * perRowDeltaY, hexGraphicSide, players[playerNum].requiredFill);
+    drawHex(focusCenterX + col * perColumnDeltaX, focusCenterY + row * perRowDeltaY, hexGraphicSide, players[playerNum].fill);
   }
 }
 

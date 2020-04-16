@@ -363,31 +363,31 @@ function cardDimensions(card) {
 
   let leftEdge = spacesUsed[0][0];
   let rightEdge = leftEdge;
-  let topEdge = spacesUsed[0][1];
-  let bottomEdge = topEdge;
+  let forwardEdge = spacesUsed[0][1];
+  let rearEdge = forwardEdge;
   for (const [col, row] of spacesUsed){
-    if (col < leftEdge) {
+    if (col > leftEdge) {
       leftEdge = col;
     }
-    if (col > rightEdge) {
+    if (col < rightEdge) {
       rightEdge = col;
     }
 
-    if (row < topEdge) {
-      topEdge = row;
+    if (row > forwardEdge) {
+      forwardEdge = row;
     }
-    if (row > bottomEdge) {
-      bottomEdge = row;
+    if (row < rearEdge) {
+      rearEdge = row;
     }
   }
 
   return {
-    columnCount: rightEdge - leftEdge + 1,
-    rowCount: bottomEdge - topEdge + 1,
-    // This results in an offset of negative zero if the card doesn't use anything above or to the left of the focus space,
+    columnCount: leftEdge - rightEdge + 1,
+    rowCount: forwardEdge - rearEdge + 1,
+    // This results in an offset of negative zero if the card doesn't use anything behind or to the right of the focus space,
     // which seems a little weird but should be okay (since even strict equality considers -0 equal to +0)
-    columnOffset: -leftEdge,
-    rowOffset: -topEdge,
+    columnOffset: -rightEdge,
+    rowOffset: -rearEdge,
   };
 }
 

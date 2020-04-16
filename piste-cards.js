@@ -349,6 +349,9 @@ const cardDefs = [
 // Returns an object with the following properties:
 //   "columnCount": number of columns needed to display the card (contained within or between the card's "required" or "capture" spaces)
 //   "rowCount": number of rows needed in the same sense
+//   "colMin": minimum (or most negative) column index
+//   "colMax": maximum (or least negative) column index
+//   "rowMin", "rowMax": minimum and maximum row indices in the same way
 //   "columnOffset": column index of the focus space relative to the leftmost space in the effect
 //   "rowOffset": row index of the focus space relative to the topmost space in the effect
 //
@@ -384,6 +387,10 @@ function cardDimensions(card) {
   return {
     columnCount: leftEdge - rightEdge + 1,
     rowCount: forwardEdge - rearEdge + 1,
+    colMin: rightEdge,
+    colMax: leftEdge,
+    rowMin: rearEdge,
+    rowMax: forwardEdge,
     // This results in an offset of negative zero if the card doesn't use anything behind or to the right of the focus space,
     // which seems a little weird but should be okay (since even strict equality considers -0 equal to +0)
     columnOffset: -rightEdge,

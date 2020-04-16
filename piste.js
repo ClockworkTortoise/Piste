@@ -74,6 +74,8 @@ var graphics = {
   hexSize: 32,
   // Font to use for labeling point values on board spaces
   boardLabelFont: "20px Arial",
+  // Fill style to use for labels on board spaces
+  boardLabelFill: "white",
   // Font to use for card titles
   cardTitleFont: "25px Arial",
   // Font to use for the "This player's turn" label
@@ -425,7 +427,7 @@ function encloseHex(centerX, centerY, sideLength) {
 }
 
 // Draws a hexagon with the given center, size, fill style, and optional label
-function drawHex(centerX, centerY, sideLength, fill, label = null, labelFont = graphics.boardLabelFont) {
+function drawHex(centerX, centerY, sideLength, fill, label = null, labelFont = graphics.boardLabelFont, labelFill = graphics.boardLabelFill) {
   encloseHex(centerX, centerY, sideLength);
   ctx.fillStyle = fill;
   ctx.fill();
@@ -434,7 +436,7 @@ function drawHex(centerX, centerY, sideLength, fill, label = null, labelFont = g
     ctx.font = labelFont;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillStyle = "white";
+    ctx.fillStyle = labelFill;
     ctx.fillText(label, centerX, centerY);
   }
 }

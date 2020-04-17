@@ -110,6 +110,9 @@ var gameState = {
   activePlayer: -1,
   // Index of the card which the active player currently has selected in their hand (-1 for "no card selected")
   selectedCard: -1,
+  // Column and row of the space which the user's mouse is currently aiming at (-1 for "not aiming at a space")
+  focusCol: -1,
+  focusRow: -1,
 };
 
 // Creates the entire game for the first time, including initializing certain things.
@@ -238,6 +241,44 @@ function handleClick(event) {
     // Again, if a board space was clicked on, then there's no further need to determine whether something interesting was clicked on
     return;
   }
+}
+
+function handleMouseMove(event) {
+  // Mouse movement only matters while a card is selected, so we don't need to do all the calculations if no card is selected
+  if (gameState.selectedCard === -1) {
+    return;
+  }
+
+  // Figure out which space the mouse is pointing at.
+  // If it's the same as it was before (including if we're currently and previously pointing at no space)
+  // then we don't need to bother redrawing anything.
+  let newFocusSpace = whichBoardSpace(event.offsetX, event.offsetY);
+  let col = -1;
+  let row = -1;
+  if (newFocusSpace !== null) {
+    col = newFocusSpace.col;
+    row = newFocusSpace.row;
+  }
+  if (col === gameState.focusCol && row === gameState.focusRow) {
+    return;
+  }
+
+  // If the mouse was previously pointing at a space, we'll need to clear the board of the previous effect graphics
+  if (gameState.focusCol !== -1) {
+    drawBoard();
+  }
+  // If the mouse is now pointing at a space, we'll need to draw new graphics for the effect of playing the card there
+  if (col !== -1) {
+    // TODO: actual graphics for card effect rather than placeholder circle effect
+    ctx.beginPath();
+    ctx.arc(colCenterX(col), rowCenterY(row), graphics.hexSize * 0.8, 0, 2 * Math.PI);
+    ctx.strokeStyle = "#00ff00";
+    ctx.stroke();
+  }
+
+  gameState.focusCol = col;
+  gameState.focusRow = row;
+
 }
 
 // Determines whether the given coordinates are in a card space.

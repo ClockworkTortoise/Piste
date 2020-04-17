@@ -253,13 +253,13 @@ function handleMouseMove(event) {
   // If it's the same as it was before (including if we're currently and previously pointing at no space)
   // then we don't need to bother redrawing anything.
   let newFocusSpace = whichBoardSpace(event.offsetX, event.offsetY);
-  let col = -1;
-  let row = -1;
+  let focusCol = -1;
+  let focusRow = -1;
   if (newFocusSpace !== null) {
-    col = newFocusSpace.col;
-    row = newFocusSpace.row;
+    focusCol = newFocusSpace.col;
+    focusRow = newFocusSpace.row;
   }
-  if (col === gameState.focusCol && row === gameState.focusRow) {
+  if (focusCol === gameState.focusCol && focusRow === gameState.focusRow) {
     return;
   }
 
@@ -268,17 +268,79 @@ function handleMouseMove(event) {
     drawBoard();
   }
   // If the mouse is now pointing at a space, we'll need to draw new graphics for the effect of playing the card there
-  if (col !== -1) {
-    // TODO: actual graphics for card effect rather than placeholder circle effect
-    ctx.beginPath();
-    ctx.arc(colCenterX(col), rowCenterY(row), graphics.hexSize * 0.8, 0, 2 * Math.PI);
-    ctx.strokeStyle = "#00ff00";
-    ctx.stroke();
+  if (focusCol !== -1) {
+    let player = players[gameState.activePlayer];
+    let cardOrientationMultiplier = (gameState.activePlayer === 0) ? 1 : -1;
+    let card = player.hand[gameState.selectedCard];
+    let playable = true;
+
+    for (const [colOffset, rowOffset] of card.required) {
+      let col = focusCol + cardOrientationMultiplier * colOffset;
+      let row = focusRow + cardOrientationMultiplier * rowOffset;
+      // If the active player controls a required space, we'll mark it with a check.
+      // Otherwise, we'll mark it with an X.
+      if (col < 0 || col >= NUM_COLS || row < 0 || row >= NUM_ROWS || gameState.board[col][row] === NOT_ON_BOARD) {
+        // If a required space isn't even on the board, then of course the player can't play the card here
+        playable = false;
+        // We'll put an X in an area off the nearest corner of the board,
+        // so that the player has SOME visual indication of the fact that they can't play the card
+        let errorMarkerCol = (col > SPAN) ? NUM_COLS - 1 : 0;
+        let errorMarkerRow = gameState.activePlayer * (NUM_ROWS - 1);
+        markMissingRequiredSpace(errorMarkerCol, errorMarkerRow, player.fill);
+      } else if (gameState.board[col][row] === player.core) {
+        drawHex(colCenterX(col), rowCenterY(row), graphics.hexSize, player.coreFill, "✓");
+      } else if(gameState.board[col][row] === player.control) {
+        drawHex(colCenterX(col), rowCenterY(row), graphics.hexSize, player.fill, "✓");
+      } else { // space is on board, but not a core or control space for active player
+        // The active player doesn't control this space, so they can't play the card here
+        playable = false;
+        markMissingRequiredSpace(col, row, player.fill);
+      }
+    } // end for (required space)
+
+    // If the card is playable here, we'll mark capture spaces with a solid circle.
+    // If not, we'll use a dotted circle.
+    ctx.strokeStyle = player.fill;
+    if (!playable) {
+      ctx.setLineDash([6, 4]);
+    }
+    for (const [colOffset, rowOffset] of card.capture) {
+      let col = focusCol + cardOrientationMultiplier * colOffset;
+      let row = focusRow + cardOrientationMultiplier * rowOffset;
+      // Only mark spaces that are actually on the board, and that aren't already controlled by the active player.
+      // (Unlike for required spaces, capture spaces that aren't on the board don't matter at all.)
+      if (col >= 0 && col < NUM_COLS && row >= 0 && row < NUM_ROWS
+          && gameState.board[col][row] !== NOT_ON_BOARD
+          && gameState.board[col][row] !== player.core && gameState.board[col][row] !== player.control) {
+        ctx.beginPath();
+        ctx.arc(colCenterX(col), rowCenterY(row), graphics.hexSize * 0.65, 0, 2 * Math.PI);
+        ctx.stroke();
+      }
+    } // end for (capture space)
+    // Set line dash back to default (so that we don't have to do it everywhere else we draw a line)
+    ctx.setLineDash([]);
   }
 
-  gameState.focusCol = col;
-  gameState.focusRow = row;
+  gameState.focusCol = focusCol;
+  gameState.focusRow = focusRow;
+}
 
+// Used when drawing card effects on the board to put an X through a required space that the active player doesn't control
+function markMissingRequiredSpace(col, row, playerColor) {
+  let centerX = colCenterX(col);
+  let centerY = rowCenterY(row);
+  let markSpan = graphics.hexSize * 0.5;
+
+  ctx.strokeStyle = playerColor;
+
+  ctx.beginPath();
+  ctx.moveTo(centerX + markSpan, centerY + markSpan);
+  ctx.lineTo(centerX - markSpan, centerY - markSpan);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(centerX - markSpan, centerY + markSpan);
+  ctx.lineTo(centerX + markSpan, centerY - markSpan);
+  ctx.stroke();
 }
 
 // Determines whether the given coordinates are in a card space.
@@ -371,6 +433,8 @@ function whichBoardSpace(x, y) {
 }
 
 function drawBoard() {
+  ctx.clearRect(0, 0, graphics.handLeftBorderX, canvas.height);
+
   for (let col = 0; col < NUM_COLS; col++) {
     let x = colCenterX(col);
     for (let row = topRowForColumn(col); row < rowLimitForColumn(col); row += 2) {

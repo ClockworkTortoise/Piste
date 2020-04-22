@@ -201,7 +201,7 @@ function handleClick(event) {
   // If the click was in a card space belonging to the active player, select or deselect that card
   // offsetX, offsetY
   let cardClicked = whichCard(event.offsetX, event.offsetY);
-  if (cardClicked != null) {
+  if (cardClicked !== null) {
     if (cardClicked.player === gameState.activePlayer) {
       let previouslySelectedCard = gameState.selectedCard;
       // If the player clicked a card they had previously selected, we'll deselect it.
@@ -215,7 +215,7 @@ function handleClick(event) {
         gameState.selectedCard = -1;
       }
       // We need to select a card only if the player didn't click on their previously selected card
-      if (cardClicked.cardIndex != previouslySelectedCard) {
+      if (cardClicked.cardIndex !== previouslySelectedCard) {
         drawCard(players[gameState.activePlayer].hand[cardClicked.cardIndex],
                  gameState.activePlayer,
                  cardLeftBorderX(cardClicked.cardIndex),

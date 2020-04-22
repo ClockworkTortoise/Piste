@@ -260,14 +260,61 @@ function handleClick(event) {
       }
     }
 
-    // TODO: this is just a placeholder to verify that we're correctly calculating board spaces; remove this when adding actual "click on space" functionality
-    drawBoard();
-    ctx.beginPath();
-    ctx.arc(colCenterX(spaceClicked.col), rowCenterY(spaceClicked.row), graphics.hexSize * 0.6, 0, 2 * Math.PI);
-    ctx.strokeStyle = "#ff00ff";
-    ctx.stroke();
+    // If the card CAN actually be played here, then perform the card's capture effects.
+    let opponentCore = players[1 - gameState.activePlayer].core;
+    let opponentControl = players[1 - gameState.activePlayer].control;
+    for (const [colOffset, rowOffset] of card.capture) {
+      let col = spaceClicked.col + cardOrientationMultiplier * colOffset;
+      let row = spaceClicked.row + cardOrientationMultiplier * rowOffset;
+      if (col >= 0 && col < NUM_COLS && row >= 0 && row < NUM_ROWS) {
+        let controller = gameState.board[col][row];
+        if (controller === opponentCore) {
+          // If we capture an opponent's core space, we don't take control of it
+          // (to ensure each player always has SOME spaces they can play from)
+          // but we DO score points for it immediately without having to retain the space until our next turn.
+          // (Math.abs accounts for the fact that getScoreValue returns a negative value if
+          // the space can earn points for the bottom player.)
+          player.score += Math.abs(getScoreValue(col, row));
+        } else if (controller === opponentControl || controller === UNCONTROLLED) {
+          // If we capture a neutral space or the opponent's non-core space,
+          // then control of that space changes to us.
+          gameState.board[col][row] = player.control;
+        }
+        // (It's also possible that the control marker is player.control, player.core, or NOT_ON_BOARD,
+        // but in the first case there's no need to set the marker to the value it already has,
+        // and in the latter two cases we should definitely NOT change the marker.)
+      }
+    }
 
-    // Again, if a board space was clicked on, then there's no further need to determine whether something interesting was clicked on
+    // Now we need to clean up the game and display state, then switch to the other player's turn.
+
+    // Redraw board to account for changes in control
+    drawBoard();
+
+    // Discard and get new cards (shifting kept cards to the left), then re-draw the graphics for the player's hand.
+    // Note that the game discards both the card that was used AND the leftmost unused card,
+    // in order to keep players' hands from getting clogged with weak or irrelevant cards.
+    let shiftTo = 0;
+    let shiftFrom = (gameState.selectedCard <= 1) ? 2 : 1;
+    while (shiftTo < HAND_SIZE) {
+      if (shiftFrom === gameState.selectedCard) {
+        shiftFrom++;
+      }
+      if (shiftFrom < HAND_SIZE) {
+        player.hand[shiftTo] = player.hand[shiftFrom];
+      } else {
+        player.hand[shiftTo] = getRandomCard();
+      }
+      shiftTo++;
+      shiftFrom++;
+    }
+    // Indicate that no card is currently selected (note we need to do this AFTER shifting used cards)
+    gameState.selectedCard = -1;
+    drawHand(gameState.activePlayer);
+    endTurn();
+
+    // As with clicking on cards, if a board space was clicked on,
+    // then there's no further need to determine whether something interesting was clicked on
     return;
   }
 }
@@ -723,4 +770,15 @@ function drawCardEffect(card, playerNum, leftX, topY, width, height) {
 function getRandomCard() {
   let cardIndex = Math.floor(Math.random() * cards.length);
   return cards[cardIndex];
+}
+
+// Does everything that happens between completing one player's action
+// and allowing the other player to take action
+function endTurn() {
+  // TODO: do other things that happen while switching turns, such as:
+  // de-controlling spaces that are no longer connected to their controller's core
+  // scoring spaces the new active player controls in their opponent's half of the board
+
+  gameState.activePlayer = 1 - gameState.activePlayer;
+  markActivePlayer();
 }

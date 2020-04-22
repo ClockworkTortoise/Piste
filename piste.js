@@ -33,7 +33,9 @@ const SQRT3 = Math.sqrt(3);
 // "core" and "control" are the flags used to indicate the core spaces and other controlled spaces for each player.
 // "coreFill" is the color used for the player's core spaces on the board.
 // "fill" is the color used for the player's non-core spaces on the board, and most other things where we want to indicate a specific player via color.
-// A "hand" property will be added later which will be an array of cards in the player's hand.
+// The following additional properties will be set when the game is started:
+//   "hand": an array of cards in the player's hand
+//   "score": number of points the player has earned
 var players = [
   // players[0] is the player that starts from the top of the board
   {
@@ -180,6 +182,10 @@ function initializeGame() {
 
   // The board has now been initialized, so we can draw it here
   drawBoard();
+
+  // Now we move on to player setup - start by setting each player's score to zero
+  players[0].score = 0;
+  players[1].score = 0;
 
   // Draw starting hands
   players[0].hand = [];

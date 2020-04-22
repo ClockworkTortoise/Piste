@@ -77,8 +77,8 @@ var graphics = {
   boardLabelFill: "white",
   // Font to use for card titles
   cardTitleFont: "25px Arial",
-  // Font to use for the "This player's turn" label
-  activePlayerLabelFont: "40px Arial",
+  // Font to use for player labels such as "Your turn" or the score counter
+  playerLabelFont: "40px Arial",
   // General font class to use for card effect labels (the size will be determined by the size of the hexes in the effect)
   cardEffectLabelFontType: "Arial",
   // Horizontal offset from left side of board to left side of area indicating players' hands
@@ -200,7 +200,7 @@ function initializeGame() {
 
   // Choose the first player
   gameState.activePlayer = Math.floor(Math.random() * 2);
-  markActivePlayer();
+  drawPlayerLabels();
 }
 
 function handleClick(event) {
@@ -619,21 +619,33 @@ function drawHex(centerX, centerY, sideLength, fill, label = null, labelFont = g
   }
 }
 
-// Draws an indication of whose turn it is (and erases any previous indication of it being the other player's turn)
-function markActivePlayer() {
-  ctx.font = graphics.activePlayerLabelFont;
+// Draws indicators next to the players' hands (and erases any labels that were there previously):
+// 1. an indication of whose turn it is
+// 2. a score counter for each player
+function drawPlayerLabels() {
+  ctx.font = graphics.playerLabelFont;
   ctx.textAlign = "left";
-  ctx.textBaseline = "middle";
 
   let handRightBorderX = handRightX();
 
+  // Clear previously existing labels
+  ctx.clearRect(handRightBorderX, handTopY(0), canvas.width - handRightBorderX, 2 * graphics.cardSpaceHeight + graphics.margin);
+
   // Mark active player
+  ctx.textBaseline = "middle";
   ctx.fillStyle = players[gameState.activePlayer].coreFill;
   let handMidY = handTopY(gameState.activePlayer) + graphics.cardSpaceHeight / 2;
   ctx.fillText("← Your turn", handRightBorderX, handMidY);
 
-  // Clear mark for inactive player
-  ctx.clearRect(handRightBorderX, handTopY(1 - gameState.activePlayer), canvas.width - handRightBorderX, graphics.cardSpaceHeight);
+  // Add score indicators
+  ctx.textBaseline = "bottom";
+  ctx.fillStyle = players[0].coreFill;
+  let topPlayerUnselectedCardBottom = handTopY(0) + 0.5 * graphics.cardSpaceHeight + 0.5 * graphics.unselectedCardHeight;
+  ctx.fillText("Score: " + players[0].score, handRightBorderX, topPlayerUnselectedCardBottom);
+  ctx.textBaseline = "top";
+  ctx.fillStyle = players[1].coreFill;
+  let bottomPlayerUnselectedCardTop = handTopY(1) + 0.5 * (graphics.cardSpaceHeight - graphics.unselectedCardHeight);
+  ctx.fillText("Score: " + players[1].score, handRightBorderX, bottomPlayerUnselectedCardTop);
 }
 
 // Draws the given player's hand (in the graphics sense of the word "draw")
@@ -780,5 +792,5 @@ function endTurn() {
   // scoring spaces the new active player controls in their opponent's half of the board
 
   gameState.activePlayer = 1 - gameState.activePlayer;
-  markActivePlayer();
+  drawPlayerLabels();
 }

@@ -237,6 +237,29 @@ function handleClick(event) {
 
   let spaceClicked = whichBoardSpace(event.offsetX, event.offsetY);
   if (spaceClicked !== null) {
+    let cardOrientationMultiplier = (gameState.activePlayer === 0) ? 1 : -1;
+
+    // Check whether the card can actually be played here.
+    let player = players[gameState.activePlayer];
+    let card = player.hand[gameState.selectedCard];
+    for (const [colOffset, rowOffset] of card.required) {
+      // TODO: Is there a good way to emphasize why the card can't be played here?
+      // Currently we just fail to play the card, and hope that the player notices
+      // the X through a missing requirement and the dotted ring in the spaces they would capture if it were a legal play.
+      let col = spaceClicked.col + cardOrientationMultiplier * colOffset;
+      if (col < 0 || col >= NUM_COLS) {
+        return;
+      }
+      let row = spaceClicked.row + cardOrientationMultiplier * rowOffset;
+      if (row < 0 || row >= NUM_ROWS) {
+        return;
+      }
+      let controller = gameState.board[col][row];
+      if (controller !== player.core && controller !== player.control) {
+        return;
+      }
+    }
+
     // TODO: this is just a placeholder to verify that we're correctly calculating board spaces; remove this when adding actual "click on space" functionality
     drawBoard();
     ctx.beginPath();

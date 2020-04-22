@@ -285,6 +285,8 @@ function handleClick(event) {
         // and in the latter two cases we should definitely NOT change the marker.)
       }
     }
+    // After changing control of spaces, let's de-control any that aren't connected to their controller's core.
+    clearDisconnectedSpaces();
 
     // Now we need to clean up the game and display state, then switch to the other player's turn.
 
@@ -788,9 +790,71 @@ function getRandomCard() {
 // and allowing the other player to take action
 function endTurn() {
   // TODO: do other things that happen while switching turns, such as:
-  // de-controlling spaces that are no longer connected to their controller's core
   // scoring spaces the new active player controls in their opponent's half of the board
 
   gameState.activePlayer = 1 - gameState.activePlayer;
   drawPlayerLabels();
+}
+
+// Sets all spaces to uncontrolled except those which are contiguously connected to their controller's core spaces
+// via spaces which that player controls.
+// NOTE: This does not redraw the board, so if you aren't going to make any other changes to the board between doing this
+// and allowing player actions, then you should call drawBoard() after this function.
+function clearDisconnectedSpaces() {
+  // Diagram indicating whether each space is 
+  let connectionDiagram = [];
+  // Queue will be used for filling in each player's contiguously controlled area in a manner similar to breadth-first search
+  let queue = [];
+
+  // Uncontrolled spaces and "not on board" coordinates can be set to the same value in the connection diagram.
+  // Core spaces will be marked in the connection diagram with the ordinary control value of their controller for simplicity.
+  // Non-core controlled spaces will be initialized to null to indicate that we haven't yet determined whether they're connected to something.
+  for (let col = 0; col < NUM_COLS; col++) {
+    connectionDiagram[col] = [];
+    for (let row = 0; row < NUM_ROWS; row++) {
+      let state = gameState.board[col][row];
+      if (state === players[0].control || state === players[1].control) {
+        connectionDiagram[col][row] = null;
+      } else if (state === players[0].core || state === players[1].core) {
+        connectionDiagram[col][row] = (state === players[0].core) ? players[0].control : players[1].control;
+        // We might as well also note here that this is one of the starting spaces for the breadth-first traversal
+        queue.push({col: col, row: row});
+      } else {
+        connectionDiagram[col][row] = state;
+      }
+    } // end for(row)
+  } // end for(col) loop for connection diagram initialization
+
+  // The change in column and row values between adjacent spaces in each possible direction,
+  // in the form [colDelta, rowDelta]
+  const directions = [[0, 2], [0, -2], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+
+  while (queue.length !== 0) {
+    let coords = queue.shift();
+    let marker = connectionDiagram[coords.col][coords.row];
+    for (const [colDelta, rowDelta] of directions) {
+      let neighborCol = coords.col + colDelta;
+      let neighborRow = coords.row + rowDelta;
+      // We only need to expand into spaces that are all of the following:
+      // 1. on the board
+      // 2. not yet known to be connected or disconnected
+      // 3. controlled by the same player whose space we're expanding from
+      if (neighborCol >= 0 && neighborCol < NUM_COLS && neighborRow >= 0 && neighborRow < NUM_ROWS
+          && connectionDiagram[neighborCol][neighborRow] === null
+          && gameState.board[neighborCol][neighborRow] === marker) {
+        connectionDiagram[neighborCol][neighborRow] = marker;
+        queue.push({col: neighborCol, row: neighborRow});
+      }
+    }
+  } // end while (queue not empty)
+
+  // We should now have marked each connected controlled space as such,
+  // so we can go through and de-control each space marked with null in the connection diagram.
+  for (let col = 0; col < NUM_COLS; col++) {
+    for (let row = 0; row < NUM_ROWS; row++) {
+      if (connectionDiagram[col][row] === null) {
+        gameState.board[col][row] = UNCONTROLLED;
+      }
+    }
+  }
 }

@@ -26,6 +26,9 @@ const STARTING_UNCONTROLLED_DEPTH = 4;
 // Number of cards each player draws up to at the start of the game and the end of each of their turns
 const HAND_SIZE = 3;
 
+// Number of points needed to win the game
+const POINT_TARGET = 50;
+
 // We'll need this a lot for calculating the centers of hexes, so let's just calculate it once
 const SQRT3 = Math.sqrt(3);
 
@@ -131,6 +134,8 @@ function createGame() {
 // Wipes the game state and starts a new play of the game.
 // Called by createGame() when the page is loaded, and again whenever the players want to start a new game.
 function initializeGame() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
   gameState.board = [];
   // Initialize everything as "not on the board"
   for (let col = 0; col < NUM_COLS; col++) {
@@ -204,6 +209,12 @@ function initializeGame() {
 }
 
 function handleClick(event) {
+  // If the previous game has ended, then clicking anywhere will simply restart the game.
+  if (gameState.activePlayer === -1) {
+    initializeGame();
+    return;
+  }
+
   // If the click was in a card space belonging to the active player, select or deselect that card
   // offsetX, offsetY
   let cardClicked = whichCard(event.offsetX, event.offsetY);
@@ -292,6 +303,12 @@ function handleClick(event) {
 
     // Redraw board to account for changes in control
     drawBoard();
+
+    // Check whether the active player got enough points by hitting core spaces to win the game
+    if (checkForWin()) {
+      // If so, we won't bother with changing their hand
+      return;
+    }
 
     // Discard and get new cards (shifting kept cards to the left), then re-draw the graphics for the player's hand.
     // Note that the game discards both the card that was used AND the leftmost unused card,
@@ -792,6 +809,7 @@ function endTurn() {
   gameState.activePlayer = 1 - gameState.activePlayer;
   scoreForActivePlayer();
   drawPlayerLabels();
+  checkForWin();
 }
 
 // Gives the active player points for any spaces they control on their opponent's half of the board.
@@ -806,6 +824,24 @@ function scoreForActivePlayer() {
         player.score += Math.max(0, getScoreValue(col, row) * directionMultiplier);
       }
     }
+  }
+}
+
+// Checks whether the active player (or the given player) has enough points to win.
+// If so, draws a graphical indicator of this and sets the active player number to -1 to indicate the game is over.
+// Returns true if a win was detected, false otherwise.
+function checkForWin(playerNum = gameState.activePlayer) {
+  if (players[playerNum].score >= POINT_TARGET) {
+    ctx.font = graphics.playerLabelFont;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = players[playerNum].coreFill;
+    let message = (playerNum === 0 ? "Top" : "Bottom") + " player wins! Click to start a new game.";
+    ctx.fillText(message, graphics.handLeftBorderX, handTopY(2));
+    gameState.activePlayer = -1;
+    return true;
+  } else {
+    return false;
   }
 }
 

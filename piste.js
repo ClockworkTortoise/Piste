@@ -789,11 +789,24 @@ function getRandomCard() {
 // Does everything that happens between completing one player's action
 // and allowing the other player to take action
 function endTurn() {
-  // TODO: do other things that happen while switching turns, such as:
-  // scoring spaces the new active player controls in their opponent's half of the board
-
   gameState.activePlayer = 1 - gameState.activePlayer;
+  scoreForActivePlayer();
   drawPlayerLabels();
+}
+
+// Gives the active player points for any spaces they control on their opponent's half of the board.
+function scoreForActivePlayer() {
+  let player = players[gameState.activePlayer];
+  // Multiplier to adjust for the fact that getScore() returns negative values for spaces which earn points for the bottom player.
+  let directionMultiplier = (gameState.activePlayer === 0) ? 1 : -1;
+
+  for (let col = 0; col < NUM_COLS; col++) {
+    for (let row = 0; row < NUM_ROWS; row++) {
+      if (gameState.board[col][row] === player.control) {
+        player.score += Math.max(0, getScoreValue(col, row) * directionMultiplier);
+      }
+    }
+  }
 }
 
 // Sets all spaces to uncontrolled except those which are contiguously connected to their controller's core spaces

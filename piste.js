@@ -306,7 +306,9 @@ function handleClick(event) {
 
     // Check whether the active player got enough points by hitting core spaces to win the game
     if (checkForWin()) {
-      // If so, we won't bother with changing their hand
+      // If so, we won't bother with changing their hand.
+      // (We do need to draw player labels to update the score, since normally we would do that in the endTurn() method)
+      drawPlayerLabels();
       return;
     }
 

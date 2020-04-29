@@ -306,9 +306,11 @@ function handleClick(event) {
 
     // Check whether the active player got enough points by hitting core spaces to win the game
     if (checkForWin()) {
-      // If so, we won't bother with changing their hand.
-      // (We do need to draw player labels to update the score, since normally we would do that in the endTurn() method)
-      drawPlayerLabels();
+      // We want to mark "no selected card" here so that the mouse-move code
+      // doesn't think it needs to draw anything on the board.
+      // (Normally we need to do that after refreshing the player's hand,
+      // but we don't do that when the game ends, in order to let the players see the winning card.)
+      gameState.selectedCard = -1;
       return;
     }
 
@@ -834,6 +836,9 @@ function scoreForActivePlayer() {
 // Returns true if a win was detected, false otherwise.
 function checkForWin(playerNum = gameState.activePlayer) {
   if (players[playerNum].score >= POINT_TARGET) {
+    // Draw player labels in case the score has changed since they were last drawn.
+    drawPlayerLabels();
+
     ctx.font = graphics.playerLabelFont;
     ctx.textAlign = "left";
     ctx.textBaseline = "top";

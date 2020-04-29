@@ -247,7 +247,7 @@ function handleClick(event) {
   }
 
   let spaceClicked = whichBoardSpace(event.offsetX, event.offsetY);
-  if (spaceClicked !== null) {
+  if (spaceClicked !== null && gameState.selectedCard !== -1) {
     let cardOrientationMultiplier = (gameState.activePlayer === 0) ? 1 : -1;
 
     // Check whether the card can actually be played here.

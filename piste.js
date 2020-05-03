@@ -139,6 +139,12 @@ function initializeGame() {
   initializeBoard();
   initializeHands();
 
+  ctx.font = graphics.playerLabelFont;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "black";
+  ctx.fillText("Score to win: " + POINT_TARGET + " or greater", graphics.handLeftBorderX, handTopY(2));
+
   // Choose the first player
   gameState.activePlayer = Math.floor(Math.random() * 2);
   drawPlayerLabels();
@@ -851,7 +857,11 @@ function checkForWin(playerNum = gameState.activePlayer) {
     ctx.textBaseline = "top";
     ctx.fillStyle = players[playerNum].coreFill;
     let message = (playerNum === 0 ? "Top" : "Bottom") + " player wins! Click to start a new game.";
-    ctx.fillText(message, graphics.handLeftBorderX, handTopY(2));
+    // Erase the "point total" message in order to write the victory message
+    let x = graphics.handLeftBorderX;
+    let y = handTopY(2);
+    ctx.clearRect(x, y, canvas.width - x, canvas.height - y);
+    ctx.fillText(message, x, y);
     gameState.activePlayer = -1;
     return true;
   } else {

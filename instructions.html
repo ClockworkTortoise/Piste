@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Piste Instructions</title>
+    <script src="piste-cards.js"></script>
+    <script src="piste.js"></script>
+    <script src="piste-instructions.js"></script>
+  </head>
+  <body onload="createInstructions()">
+    <h1>Piste - Instructions</h1>
+
+    <h2 id="overview">Overview</h2>
+    <p>
+      <a href="game.html">Piste</a> is a simple two-player game of board control, with a loose "hand-to-hand combat" theme.
+    </p>
+    <p>
+      At the start of the game, one player controls a number of spaces at the top of the board, and the other player controls a number of spaces at the bottom.
+      The players will play cards to expand their control and reduce their opponent's control, earning points for any spaces they are able to maintain control of.
+    </p>
+
+    <h2 id="contents">Table of Contents</h2>
+    <ul>
+      <li><a href="#overview">Overview</a> (including a link back to the game page)</li>
+      <li><a href="#components">Game Components</a></li>
+      <ul>
+        <li><a href="#the-board">Board</a></li>
+        <li><a href="#hands-and-labels">Player-Specific Components</a></li>
+      </ul>
+      <li><a href="#turn-order">Turn Order</a></li>
+      <li><a href="#scoring">Step 1: Scoring</a></li>
+      <li><a href="#playing-cards">Step 2: Choosing Where to Play a Card</a></li>
+      <ul>
+        <li><a href="#targeting-demo">Targeting demo</a></li>
+      </ul>
+      <li><a href="#capture">Step 3: Capturing Spaces</a></li>
+      <li><a href="#disconnect">Step 4: Lose Control of Disconnected Spaces</a></li>
+      <li><a href="#reset-hand">Step 5: Discard and Draw</a></li>
+      <li><a href="#winning">Winning the Game</a></li>
+      <li><a href="#the-end">Conclusion</a> (including another link back to the game page)</li>
+    </ul>
+
+    <h2 id="components">Game Components</h2>
+    <h4 id="the-board">Board</h4>
+    <p>
+      Piste is played on a board with hexagonal spaces. At the start of the game, the board looks like this:
+    </p>
+    <canvas id="board-illus" style="background-color: #d0e0d0"></canvas>
+    <p>
+      The region in the middle is initially not controlled by either player.
+      The two similarly-colored regions at the top are controlled by one player (who will be referred to as the "top player"),
+      and the two regions at the bottom are controlled by the other player (referred to as the "bottom player").
+    </p>
+    <p>
+      The reason that the uppermost and lowermost spaces in each column are colored differently is that those are each player's "core" spaces, which they can never lose control of.
+    </p>
+    <p>
+      Most board spaces containing a number indicating how many points that space is worth, with an arrow pointing toward the player who can score for controlling that space.
+      Spaces without a number aren't worth any points to either player.
+    </p>
+    <h4 id="hands-and-labels">Player-Specific Components</h4>
+    <p>
+      Each player has a hand of cards, which will be shown to the right of the board.
+      To the right of the players' hands, you'll see each player's score, along with an indication of whose turn it is.
+      This will look something like this:
+    </p>
+    <canvas id="hand-and-label-illus" style="background-color: #d0e0d0"></canvas>
+
+    <h2 id="turn-order">Turn Order</h2>
+    <p>
+      At the start of the game, a random player is chosen to take the first turn.
+    </p>
+    <p>
+      On each turn, the following things happen in this order:
+    </p>
+    <ol>
+      <li>The active player (i.e. the player whose turn it is) scores for any spaces they still control on their opponent's side of the board.</li>
+      <li>The active player chooses a card to play, and where to play it on the board.</li>
+      <li>The active player gains control of whichever spaces their card gives them control of,
+        except that if they would gain control of any of their opponent's core spaces this way, instead they immediately score points for those spaces.</li>
+      <li>Each player loses control of any spaces that aren't connected to their core spaces through spaces they control.</li>
+      <li>The active player discards the card they played, as well as the leftmost card that they didn't play.
+        Whatever remains in their hand shifts to the left, and they get new cards to fill their hand back up to the hand size.</li>
+    </ol>
+    <p>
+      Each of these is described in more detail in the following sections.
+    </p>
+
+    <h2 id="scoring">Step 1: Scoring</h2>
+    <p>
+      At the start of your turn, for each space you control that's closer to your opponent's side of the board than to yours,
+      you'll earn the number of points shown in that space.
+    </p>
+    <p>
+      Note that this happens before you play your card for the turn,
+      so you won't score for any spaces that your opponent managed to take away from you during their turn.
+    </p>
+    <p>
+      The "core" spaces at the top and bottom of the board work a little differently;
+      you can never control your opponent's core spaces, but you score immediately if you hit them.
+      See the section on <a href="#capture">capturing spaces</a>.
+    </p>
+    <p>
+      To make it slightly easier to see which spaces score for which player (especially near the center of the board),
+      each space that's worth points has an arrow pointing toward the player who can score points by controlling it.
+    </p>
+    <p>
+      One row of spaces in the middle of the board is equally close to both sides and is therefore not worth points to either player,
+      so the spaces in that row don't have numbers in them.
+    </p>
+
+    <h2 id="playing-cards">Step 2: Choosing Where to Play a Card</h2>
+    <p>
+      To play a card, you'll first have to select it by clicking on it.
+      You can change which card is selected by clicking on a different one,
+      or you can deselect your current card by clicking on it again.
+    </p>
+    <p>
+      After selecting a card, you'll have to choose a legal place to play it on the board.
+    </p>
+    <p>
+      Note that each card has an illustration containing two types of spaces:
+    </p>
+    <ul>
+      <li>
+        The spaces in the illustration that are solidly filled with your color indicate <em>requirements</em>.
+        In order to play a card, you must line up its pattern on the board in such a way that all the required spaces line up with spaces you control.
+      </li>
+      <li>
+        The spaces that are mostly the neutral color but with a plus symbol in your color indicate which spaces the card lets you <em>capture</em>.
+        Once you choose a legal place to play the card, you'll either gain control of these spaces or earn points for them.
+        See the section on <a href="#capture">capturing spaces</a>.
+      </li>
+    </ul>
+    <p>
+      For example, consider this card (the illustration on the left is for the top player, and the one on the right is for the bottom player):
+    </p>
+    <canvas id="card-illus" style="background-color: #d0e0d0"></canvas>
+    <p>
+      In order to play this card, you must control two vertically-adjacent spaces.
+      If you do, the card lets you capture the next five spaces toward your opponent in the same column.
+    </p>
+    <p>
+      While you have a card selected, moving your mouse around the board will let you see where it can be played and what the effects will be.
+      Below is a demonstration that allows you to try this out.
+      The demo is somewhat randomized; click the button below it to try out different cards for different players.
+    </p>
+    <canvas id="targeting-demo" width="1500" height="800" style="background-color: #d0e0d0" onmousemove="handleMouseMove(event)"></canvas>
+    <p><button onclick="randomizeTargetingDemo()">Randomize</button></p>
+    <p>
+      Things to note:
+    </p>
+    <ul>
+      <li>If a required space lines up with a space you control, it's marked with a checkmark.</li>
+      <li>If a required space lines up with a space that's neutral or controlled by your opponent, it's marked with an X in your color.</li>
+      <li>If a required space isn't on the board, an X will be placed in one of the empty spaces at the corners of the board.</li>
+      <li>Spaces you would capture by playing the card there are marked with a circle.
+        If the circles use dashed lines, that means you can't play the card there because one or more required spaces are missing.</li>
+    </ul>
+
+    <h2 id="capture">Step 3: Capturing Spaces</h2>
+    <p>
+      Once you've chosen where to play your card, click the mouse in order to capture the circled spaces.
+      (Note that the demo above is just meant to illustrate targeting and won't do anything if you click on it.)
+    </p>
+    <p>
+      "Capturing" means one of two things depending on what kind of space you're capturing.
+    </p>
+    <p>
+      If you capture a neutral space, or a non-core space controlled by your opponent, the space switches to your control.
+      On your future turns, you'll score points for the space if you still control it at the start of your turn.
+    </p>
+    <p>
+      You can't gain control of your opponent's core spaces, but instead, if you capture one of them, you'll <em>immediately</em> earn points for it.
+    </p>
+    <p>
+      As such, capturing core spaces is better for getting points immediately but typically worse for getting points over multiple turns,
+      especially considering that when you're playing that close to your opponent's side of the board,
+      they will likely be able to recapture many of the other spaces you took control of at the same time that you hit their core.
+    </p>
+
+    <h2 id="disconnect">Step 4: Lose Control of Disconnected Spaces</h2>
+    <p>
+      You can only retain control of spaces that form a contiguous group with your core spaces.
+      Any spaces that aren't part of a contiguous group with their controller's core will be set to neutral in this step.
+    </p>
+    <p>
+      Usually this happens because the active player captured some of the spaces that were previously connecting others of their opponent's spaces to their core.
+      However, it can also happen to the active player, if you play a card whose effect captures some spaces that aren't connected to the required spaces,
+      or if the captured spaces have a hook-like shape and some of the spaces in the middle of the hook land in your opponent's core.
+      (At the time of this writing, only Lunge falls into the first category, and no cards fall into the second.)
+    </p>
+
+    <h2 id="reset-hand">Step 5: Discard and Draw</h2>
+    <p>
+      The card you played will be discarded after you play it.
+      In order to keep players' hands from getting clogged with weak cards, the leftmost card you didn't play will also be discarded.
+    </p>
+    <p>
+      After those two cards are discarded, whatever remains will be shifted to the left, and new cards will be added to bring your hand back up to the hand size.
+      At the time of this writing, the game simply generates new cards every time; you might end up with multiple copies of the same card,
+      and cards you've seen recently are just as likely to be generated as cards that haven't appeared all game.
+    </p>
+
+    <h2 id="winning">Winning the Game</h2>
+    <p id="point-target">
+      As soon as either player reaches a certain target number of points, the game ends and that player wins.
+    </p>
+    <p>
+      This happens whether the points are earned by capturing core spaces or by controlling spaces at the start of the turn.
+      If you hit the target score by capturing one or more of your opponent's core spaces,
+      you win even if your opponent would have earned enough points to beat your score at the start of your turn.
+    </p>
+
+    <h2 id="the-end">You have reached the end of the instructions.</h2>
+    <p>
+      You might now want to:
+    </p>
+    <ul>
+      <li>
+        Go to <a href="game.html">the game page</a> to play the game
+      </li>
+      <li>
+        Head back up to <a href="#contents">the table of contents</a>
+      </li>
+    </ul>
+  </body>
+</html>

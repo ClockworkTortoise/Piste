@@ -136,6 +136,15 @@ function createGame() {
 function initializeGame() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  initializeBoard();
+  initializeHands();
+
+  // Choose the first player
+  gameState.activePlayer = Math.floor(Math.random() * 2);
+  drawPlayerLabels();
+}
+
+function initializeBoard() {
   gameState.board = [];
   // Initialize everything as "not on the board"
   for (let col = 0; col < NUM_COLS; col++) {
@@ -187,7 +196,9 @@ function initializeGame() {
 
   // The board has now been initialized, so we can draw it here
   drawBoard();
+}
 
+function initializeHands() {
   // Now we move on to player setup - start by setting each player's score to zero
   players[0].score = 0;
   players[1].score = 0;
@@ -202,10 +213,6 @@ function initializeGame() {
   // Draw starting hands (in the other sense of "draw")
   drawHand(0);
   drawHand(1);
-
-  // Choose the first player
-  gameState.activePlayer = Math.floor(Math.random() * 2);
-  drawPlayerLabels();
 }
 
 function handleClick(event) {

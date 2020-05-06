@@ -11,6 +11,7 @@ The name is a term which, among other things, refers to an area which is used fo
 Known Issues
 ------------
 * No networked play, play-by-email, or human-versus-computer options. If you don't want to play against yourself, you need someone else in the same room (or else screen-sharing or something).
+* No responsive interface code. The game will be difficult to play on smaller screens.
 * The game relies on color to communicate a lot of information, most importantly the information regarding who controls what parts of the board. I've chosen colors at the opposite ends of the visible spectrum in the hopes that it will minimize the impact on the most common types of partial color-blindness, but people who can't distinguish red from blue may find the game unplayable unless they edit the code to change the color scheme or add non-color-based control indicators.
 * The first player probably has a significant strategic advantage.
 * It seems to be hard to stage even a partial comeback once your opponent gains control of too much of the board.
